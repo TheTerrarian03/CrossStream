@@ -3,123 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Stream with Sliders</title>
+    <title>Slider Demo</title>
     <style>
         body {
-            background-color: #2f2f2f;
-            margin: 0;
-            padding: 0;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            height: 100vh;
+            margin: 20px;
+            background-color: rgb(35, 35, 35);
+        }
+        h1 {
+            color: white;
+        }
+        label {
+            color: white;
+        }
+        #canvas {
+            position: relative;
             overflow: hidden;
         }
-        .container {
-            text-align: center;
-            position: relative;
+        #image {
             width: 100%;
-            height: 100%;
-        }
-        .title {
-            position: absolute;
-            top: 10px;
-            width: 100%;
-            font-size: 2rem;
-            color: white;
-            font-family: Arial, sans-serif;
-            font-weight: bold;
-            z-index: 10;
-        }
-        #stream {
-            width: 100%;
-            height: 80%;
-            object-fit: contain;
-            z-index: 1;
-        }
-        .slider-container {
-            position: absolute;
-            bottom: 10%;
-            width: 100%;
-            text-align: center;
-            z-index: 5;
-        }
-        .slider {
-            width: 80%;
-            margin: 10px 0;
-        }
-        #x-slider {
-            position: absolute;
-            bottom: 5%;
-        }
-        #y-slider {
-            position: absolute;
-            bottom: 0%;
+            height: auto;
         }
         .line {
             position: absolute;
-            z-index: 2;
-        }
-        .line-horizontal {
-            width: 100%;
-            height: 2px;
-            background-color: green;
-        }
-        .line-vertical {
-            height: 100%;
-            width: 2px;
-            background-color: red;
+            background-color: lime;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="title">Image Stream with Interactive Sliders</div>
-        <img id="stream" src="http://localhost:1182/?action=stream" alt="Image Stream">
-        
-        <!-- Horizontal Line -->
-        <div class="line line-horizontal" id="horizontal-line"></div>
-        
-        <!-- Vertical Line -->
-        <div class="line line-vertical" id="vertical-line"></div>
-        
-        <div class="slider-container">
-            <!-- X Slider -->
-            <input type="range" id="x-slider" class="slider" min="0" max="100" value="50">
-            <!-- Y Slider -->
-            <input type="range" id="y-slider" class="slider" min="0" max="100" value="50">
-        </div>
+    <h1>Robot Stream</h1>
+    <div id="canvas">
+        <img id="image" src="https://64.media.tumblr.com/6e292a72630ea8a138fcb2fb5444c8f9/tumblr_n98bcm3vPu1tr1l0qo1_500.gif" alt="Sample Image">
+        <div id="horizontalLine" class="line" style="height: 2px;"></div>
+        <div id="verticalLine" class="line" style="width: 2px;"></div>
     </div>
+    <div>
+        <label for="xSlider">X Slider:</label>
+        <input type="range" id="xSlider" min="0" value="0">
+    </div>
+    <div>
+        <label for="ySlider">Y Slider:</label>
+        <input type="range" id="ySlider" min="0" value="0">
+    </div>
+    <div>
+        <label for="scaleSlider">Scale Slider:</label>
+        <input type="range" id="scaleSlider" min="0.1" max="3" step="0.1" value="1">
+    </div>
+    <button id="changeImageBtn">Change Image</button>
 
     <script>
-        const xSlider = document.getElementById('x-slider');
-        const ySlider = document.getElementById('y-slider');
-        const horizontalLine = document.getElementById('horizontal-line');
-        const verticalLine = document.getElementById('vertical-line');
-        const stream = document.getElementById('stream');
+        const xSlider = document.getElementById('xSlider');
+        const ySlider = document.getElementById('ySlider');
+        const scaleSlider = document.getElementById('scaleSlider');
+        const horizontalLine = document.getElementById('horizontalLine');
+        const verticalLine = document.getElementById('verticalLine');
+        const image = document.getElementById('image');
+        const canvas = document.getElementById('canvas');
+        const changeImageBtn = document.getElementById('changeImageBtn');
 
-        // Function to update the position of the horizontal and vertical lines
-        function updateLinePositions() {
+        // Initial image source
+        let currentImageIndex = 0;
+        const imageSources = [
+            'https://64.media.tumblr.com/6e292a72630ea8a138fcb2fb5444c8f9/tumblr_n98bcm3vPu1tr1l0qo1_500.gif',
+            'https://media0.giphy.com/media/tczJoRU7XwBS8/giphy.gif?cid=6c09b952p4lz1dm9z58tcasilswmtstyuzfmo9hxu16g6e82&ep=v1_gifs_search&rid=giphy.gif&ct=g',
+            'https://i.imgur.com/yPpk4BV.gif'
+        ];
+
+        image.onload = function() {
+            // Set the canvas size based on the image size
+            updateCanvasSize();
+        };
+
+        function updateCanvasSize() {
+            const imgWidth = image.naturalWidth * scaleSlider.value;
+            const imgHeight = image.naturalHeight * scaleSlider.value;
+
+            canvas.style.width = `${imgWidth}px`;
+            canvas.style.height = `${imgHeight}px`;
+
+            // Update slider max values
+            xSlider.max = imgWidth;
+            ySlider.max = imgHeight;
+
+            // Initialize line positions
+            updateLines();
+        }
+
+        function updateLines() {
             const xValue = xSlider.value;
             const yValue = ySlider.value;
 
-            // Convert slider values to percentages of the image dimensions
-            const streamWidth = stream.clientWidth;
-            const streamHeight = stream.clientHeight;
+            horizontalLine.style.top = `${yValue}px`;
+            horizontalLine.style.left = '0';
+            horizontalLine.style.width = `${canvas.offsetWidth}px`;
 
-            // Position the vertical line (red) at the X slider value (horizontal line)
-            verticalLine.style.left = `${(xValue / 100) * streamWidth}px`;
-
-            // Position the horizontal line (green) at the Y slider value (vertical line)
-            horizontalLine.style.top = `${(yValue / 100) * streamHeight}px`;
+            verticalLine.style.left = `${xValue}px`;
+            verticalLine.style.top = '0';
+            verticalLine.style.height = `${canvas.offsetHeight}px`;
         }
 
-        // Initialize slider values
-        updateLinePositions();
+        xSlider.addEventListener('input', updateLines);
+        ySlider.addEventListener('input', updateLines);
+        scaleSlider.addEventListener('input', () => {
+            updateCanvasSize();
+            updateLines();
+        });
 
-        // Update positions when sliders change
-        xSlider.addEventListener('input', updateLinePositions);
-        ySlider.addEventListener('input', updateLinePositions);
+        changeImageBtn.addEventListener('click', () => {
+            // Change the image source
+            currentImageIndex = (currentImageIndex + 1) % imageSources.length;
+            image.src = imageSources[currentImageIndex];
+        });
     </script>
 </body>
 </html>
