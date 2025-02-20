@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Stream with Sliders</title>
+    <style>
+        body {
+            background-color: #2f2f2f;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .container {
+            text-align: center;
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        .title {
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            font-size: 2rem;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            z-index: 10;
+        }
+        #stream {
+            width: 100%;
+            height: 80%;
+            object-fit: contain;
+            z-index: 1;
+        }
+        .slider-container {
+            position: absolute;
+            bottom: 10%;
+            width: 100%;
+            text-align: center;
+            z-index: 5;
+        }
+        .slider {
+            width: 80%;
+            margin: 10px 0;
+        }
+        #x-slider {
+            position: absolute;
+            bottom: 5%;
+        }
+        #y-slider {
+            position: absolute;
+            bottom: 0%;
+        }
+        .line {
+            position: absolute;
+            z-index: 2;
+        }
+        .line-horizontal {
+            width: 100%;
+            height: 2px;
+            background-color: green;
+        }
+        .line-vertical {
+            height: 100%;
+            width: 2px;
+            background-color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">Image Stream with Interactive Sliders</div>
+        <img id="stream" src="http://localhost:1182/?action=stream" alt="Image Stream">
+        
+        <!-- Horizontal Line -->
+        <div class="line line-horizontal" id="horizontal-line"></div>
+        
+        <!-- Vertical Line -->
+        <div class="line line-vertical" id="vertical-line"></div>
+        
+        <div class="slider-container">
+            <!-- X Slider -->
+            <input type="range" id="x-slider" class="slider" min="0" max="100" value="50">
+            <!-- Y Slider -->
+            <input type="range" id="y-slider" class="slider" min="0" max="100" value="50">
+        </div>
+    </div>
+
+    <script>
+        const xSlider = document.getElementById('x-slider');
+        const ySlider = document.getElementById('y-slider');
+        const horizontalLine = document.getElementById('horizontal-line');
+        const verticalLine = document.getElementById('vertical-line');
+        const stream = document.getElementById('stream');
+
+        // Function to update the position of the horizontal and vertical lines
+        function updateLinePositions() {
+            const xValue = xSlider.value;
+            const yValue = ySlider.value;
+
+            // Convert slider values to percentages of the image dimensions
+            const streamWidth = stream.clientWidth;
+            const streamHeight = stream.clientHeight;
+
+            // Position the vertical line (red) at the X slider value (horizontal line)
+            verticalLine.style.left = `${(xValue / 100) * streamWidth}px`;
+
+            // Position the horizontal line (green) at the Y slider value (vertical line)
+            horizontalLine.style.top = `${(yValue / 100) * streamHeight}px`;
+        }
+
+        // Initialize slider values
+        updateLinePositions();
+
+        // Update positions when sliders change
+        xSlider.addEventListener('input', updateLinePositions);
+        ySlider.addEventListener('input', updateLinePositions);
+    </script>
+</body>
+</html>
